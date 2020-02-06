@@ -157,7 +157,7 @@ and then executes each command in one or more separate processes. Your shell sha
 command or an external command. If the command is a built-in command, your shell shall 
 invoke the function in your implementation corresponding to such built-in command. 
 1. While most Unix shells have numerous built-in commands, in this project, you shall implement
-**exit**, **cd**, **pwd**, and **set**. The syntax and semantics of the 
+**exit** and **cd**. The syntax and semantics of the 
 three commands are described as follows.
 1. **exit [n]** 
    * Cause the shell to exit with a status of n.
@@ -167,9 +167,10 @@ three commands are described as follows.
    * If dir is not supplied, the value of the HOME shell variable is the default.
    * If dir does not exit, prints an error message "An error has occurred" and then 
         proceeds to next iteration.
+<!--
 1. **pwd**
    * Print the absolute pathname of the current working directory.
-<!--
+
 1. **set [var=value]**
    * Assign `value` to the shell variable `var`.
    * If the set command has no argument, print all shell variables at the time the command is executed.
