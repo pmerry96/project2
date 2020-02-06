@@ -14,14 +14,7 @@ by repeatedly dropping the multiples of newly founded prime numbers. If you are 
 
 The idea of conncurent prime sieve is due to Doug McIlroy, inventor of Unix pipes. The following figure and text borrowed from the page (https://swtch.com/~rsc/thread/) created by Russ Cox, one of the XV6 authors.
 
-```
-p = get a number from left neighbor
-print p
-loop:
-    n = get a number from left neighbor
-    if (p does not divide n)
-        send n to right neighbor
-```
+
 
 A generating process can feed the numbers 2, 3, 4, ..., N into the left end of the pipeline: the first process in the line eliminates the multiples of 2, the second eliminates the multiples of 3, the third eliminates the multiples of 5, and so on:
 
@@ -72,9 +65,26 @@ pid=70838 prime 29
 ## Hints
 
 + Because the program could not know the length of 
-the pipelines, the program may need some kind of recursion 
+the pipelines, the program may need some kind of **recursion** 
 and must decide when a process should fork a new process 
-to be its right neighbor.
+to be its right neighbor. The body of the recursion has the following logic. You shall also build pipe and properly exit and wait. 
+
+```
+prime_sieve()
+
+...
+p = get a number from left neighbor
+print p
+loop:
+    n = get a number from left neighbor
+    if (p does not divide n)
+       if ( not has_right_neighbor)
+            create right neighbor process
+            if (right neighbor process is newly created)
+                prime_sieve()
+       send n to right neighbor
+```
+
 + Each process must determine when there wil be no more data from 
 its left neighbor.
 + You can use the first process to generate all the integers 
