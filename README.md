@@ -169,6 +169,7 @@ three commands are described as follows.
         proceeds to next iteration.
 1. **pwd**
    * Print the absolute pathname of the current working directory.
+<!--
 1. **set [var=value]**
    * Assign `value` to the shell variable `var`.
    * If the set command has no argument, print all shell variables at the time the command is executed.
@@ -177,7 +178,7 @@ three commands are described as follows.
       1. both the name and value of a variable are string type; 
       1. a variable name has less than 16 characters; and 
       1. the value of a variable has less than 64 characters.      
-
+-->
 ### Command
 1. You can assume all commands will be provided in a single command line.
 1. Each command line has less than 128 characters.
