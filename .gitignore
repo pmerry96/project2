@@ -6,6 +6,10 @@ _*
 *.sym
 *.img
 *.pyc
+TaskB/kernel/*.o
+TaskB/kernel/*.d
+TaskB/kernel/*.asm
+TaskB/kernel/*.sym
 TaskB/vectors.S
 TaskB/bootblock
 TaskB/entryother
