@@ -1,3 +1,7 @@
+#ifndef __USER_H
+#define __USER_H
+//#include <stdarg.h>
+
 struct stat;
 struct rtcdate;
 
@@ -34,6 +38,7 @@ char* strcpy(char*, const char*);
 void *memmove(void*, const void*, int);
 char* strchr(const char*, char c);
 int strcmp(const char*, const char*);
+int snprintf(char *str, int size, const char *format, ...);
 void fprintf(int, const char*, ...);
 void printf(const char*, ...);
 char* gets(char*, int max);
@@ -44,3 +49,13 @@ void free(void*);
 int atoi(const char*);
 int memcmp(const void *, const void *, uint);
 void *memcpy(void *, const void *, uint);
+
+//// tsh_util.c
+//#define ErrorU(cause)  tsh_error("An error has occurred", (cause), __FILE__, __LINE__)
+//#define ErrorP(cause)  tsh_error("program error", (cause), __FILE__, __LINE__)
+//#define ErrorS(cause)  tsh_error("system error", (cause), __FILE__, __LINE__)
+//#define Debug(msg_, ...)   tsh_debug(__FILE__, __LINE__, (msg_), ##__VA_ARGS__)
+//void tsh_error(const char *prefix, const char *cause, const char *filename,  int lineno);
+//void tsh_debug(const char *filename,  int lineno, const char *fmt, ...);
+
+#endif

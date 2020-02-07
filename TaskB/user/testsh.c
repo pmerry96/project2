@@ -303,6 +303,30 @@ t7(int *ok)
   unlink(name);
 }
 
+// test a pipe with cat README | wc | wc | wc.
+void
+t7_1(int *ok)
+{
+    printf("a four-element pipe: ");
+
+    char cmd[64];
+    char data[64];
+    strcpy(data, "1 3 13");
+    strcpy(cmd, "cat ");
+    strcpy(cmd + strlen(cmd), "README");
+    strcpy(cmd + strlen(cmd), " | wc | wc | wc\n");
+
+    if(one(cmd, data, 1) == 0){
+        printf("FAIL\n");
+        *ok = 0;
+    } else {
+        printf("PASS\n");
+    }
+
+    unlink(name);
+}
+
+
 // test a pipeline that has both redirection and a pipe.
 void
 t8(int *ok)

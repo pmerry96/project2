@@ -23,3 +23,6 @@ TaskB/.gdbinit
 TaskB/myapi.key
 TaskB/xv6.out*
 TaskA/primes
+.idea/
+tags
+

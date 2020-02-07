@@ -38,6 +38,36 @@ printint(int fd, int xx, int base, int sgn)
     putc(fd, buf[i]);
 }
 
+static int
+snprintint(char *str, int size, int xx, int base, int sgn)
+{
+    char buf[16];
+    int i, neg, remain = size;
+    uint x;
+
+    neg = 0;
+    if(sgn && xx < 0){
+        neg = 1;
+        x = -xx;
+    } else {
+        x = xx;
+    }
+
+    i = 0;
+    do{
+        buf[i++] = digits[x % base];
+    }while((x /= base) != 0);
+    if(neg)
+        buf[i++] = '-';
+
+    while(--i >= 0 && remain > 0) {
+        // putc(fd, buf[i]);
+        *str++ = buf[i];
+        remain--;
+    }
+    return size - remain;
+}
+
 static void
 printptr(int fd, uint64 x) {
   int i;
@@ -45,6 +75,26 @@ printptr(int fd, uint64 x) {
   putc(fd, 'x');
   for (i = 0; i < (sizeof(uint64) * 2); i++, x <<= 4)
     putc(fd, digits[x >> (sizeof(uint64) * 8 - 4)]);
+}
+
+static int
+snprintptr(char *buf, int size, uint64 x) {
+    int i;
+    int remain = size;
+    //putc(fd, '0');
+    *buf++ = '0';
+    remain--;
+    if (remain <=0) return size - remain;
+    //putc(fd, 'x');
+    *buf++ = 'x';
+    remain--;
+    if (remain <=0) return size - remain;
+    for (i = 0; i < (sizeof(uint64) * 2) && remain > 0; i++, x <<= 4) {
+        // putc(fd, digits[x >> (sizeof(uint64) * 8 - 4)]);
+        *buf++ = digits[x >> (sizeof(uint64) * 8 - 4)];
+        remain--;
+    }
+    return size - remain;
 }
 
 // Print to the given fd. Only understands %d, %x, %p, %s.
@@ -110,4 +160,97 @@ printf(const char *fmt, ...)
 
   va_start(ap, fmt);
   vprintf(1, fmt, ap);
+}
+
+// Print to the given buffer. Only understands %d, %x, %p, %s.
+int
+vsnprintf(char *buf, int size, const char *fmt, va_list ap)
+{
+    char *s;
+    int c, i, state, nc;
+    char *p = buf;
+    int remain = size;
+
+
+    state = 0;
+    for(i = 0; fmt[i] && remain > 0; i++){
+        c = fmt[i] & 0xff;
+        if(state == 0){
+            if(c == '%'){
+                state = '%';
+            } else {
+                *p++ = c;
+                remain--;
+                if (remain <= 0) break;
+            }
+        } else if(state == '%'){
+            if(c == 'd'){
+                // printint(fd, va_arg(ap, int), 10, 1);
+                nc = snprintint(p, remain, va_arg(ap, int), 10, 1);
+                p += nc;
+                remain -= nc;
+                if (remain <= 0) break;
+            } else if(c == 'l') {
+                //printint(fd, va_arg(ap, uint64), 10, 0);
+                nc = snprintint(p, remain, va_arg(ap, uint64), 10, 1);
+                p += nc;
+                remain -= nc;
+                if (remain <= 0) break;
+            } else if(c == 'x') {
+                // printint(fd, va_arg(ap, int), 16, 0);
+                nc = snprintint(p, remain, va_arg(ap, uint64), 16, 1);
+                p += nc;
+                remain -= nc;
+                if (remain <= 0) break;
+            } else if(c == 'p') {
+                //printptr(fd, va_arg(ap, uint64));
+                nc = snprintptr(p, remain, va_arg(ap, uint64));
+                p += nc;
+                remain -= nc;
+                if (remain <= 0) break;
+            } else if(c == 's'){
+                s = va_arg(ap, char*);
+                if(s == 0)
+                    s = "(null)";
+                while(*s != 0 && remain > 0){
+                    //putc(fd, *s);
+                    *p++ = *s;
+                    s++;
+                    remain--;
+                }
+                if (remain <= 0) break;
+            } else if(c == 'c'){
+                //putc(fd, va_arg(ap, uint));
+                *p++ = va_arg(ap, uint);
+                remain--;
+            } else if(c == '%'){
+                //putc(fd, c);
+                *p++ = c;
+                remain--;
+                if (remain <= 0) break;
+            } else {
+                // Unknown % sequence.  Print it to draw attention.
+                // putc(fd, '%');
+                *p++ = '%';
+                remain--;
+                // putc(fd, c);
+                *p++ = c;
+                remain--;
+                if (remain <= 0) break;
+            }
+            state = 0;
+        }
+    }
+    return size - remain;
+}
+
+int
+snprintf(char *str, int size, const char *fmt, ...) {
+    va_list ap;
+
+    va_start(ap, fmt);
+    int nc = vsnprintf(str, size, fmt, ap);
+    if (nc >= 0 && nc <= size)
+        str[nc] = '\0';
+    return nc;
 }
