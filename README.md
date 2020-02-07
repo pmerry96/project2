@@ -111,10 +111,9 @@ and then executes each command in one or more separate processes. Your shell sha
  
 1. run commands with arguments
 1. handle input and output redirection
-1. set up a k-element pipelines, where k is within the range of 2 through **TSH_MAX_PIPELINE_LENGTH**.
-1. run a list of commands in order
+1. set up two-command pipelines.
 1. handle internal commands including **cd** and **exit**
-1. read commands from a text file and execute the commands in the same way as they are read from the console (10 points).
+1. read commands from a text file and execute the commands in the same way as they are read from the console.
 
 ## Specification
 
@@ -125,12 +124,12 @@ system calls on XV6 may have slightly different syntax as their Linux peers.
 properly can lead to memory leak or corrupted data, causing the shell to crash. 
 1. Therefore, all the data structures in your shell implementations are either statically allocated or on the stack.
 1. The `tsh` uses the limits defined in the header file `tsh.h` as a reasonable constraint to the command lines entered
- by a user. Use these Macros instead of numbers in your program to make teh program use to read and maintain. 
+ by a user. Use these Macros instead of numbers in your program to make the program use to read and maintain. 
  
 <pre>
  #define TSH_MAX_CMD_LINE_LENGTH     255                # The maximum number of characters in a command line 
  #define TSH_MAX_NUM_ARGUMENTS       5                  # The maximum number of arguments in a simple command
- #define TSH_MAX_CMD_LIST_LENGTH     5                  # The maximum number of simple commands in a command list 
+<!-- #define TSH_MAX_CMD_LIST_LENGTH     5                  # The maximum number of simple commands in a command list -->
  #define TSH_MAX_PIPELINE_LENGTH     5                  # The maximum number of simple commands in a pipelined command
  #define TSH_MAX_FILENAME_LENGTH     63                 # The maximum number of characters in a filename
 </pre>
@@ -145,18 +144,16 @@ properly can lead to memory leak or corrupted data, causing the shell to crash.
     ``` 
     xv6 kernel is booting
     $ tsh
-    tsh> grep Copyright < README
+    tsh> echo hello
     tsh> exit
     $
     ```
  1. You should structure your shell such that it creates a new process for each 
  external command (an external command that is implemented as a separate program. 
  In contrast,  a built-in command must be executed in the same process as your 
- current shell session). Running a command in a separate process has several advantages.
- First, it protects the main shell process from any error that may occur in the user's 
- command. Second, it allows to run multiple commands concurrently.
+ current shell session). 
 1. Your can assume that given an external command, either there is a program in current 
- search path corresponding to the command or there is no such program. For the first case, 
+directory (root directory) or there is no such program. For the first case, 
  execute the command as the shell normally does. For the second case, prints an error message
  "An error has occurred" and then proceeds to next iteration. 
  Note that a normal shell like *Bash* will search the executable in a list of directories 
@@ -173,7 +170,7 @@ properly can lead to memory leak or corrupted data, causing the shell to crash.
 ### Built-in Commands
 1. Whenever your shell accepts a command, it should check whether the command is a built-in
 command or an external command. If the command is a built-in command, your shell shall 
-invoke the function in your implementation corresponding to such built-in command. 
+invoke the function that implements the command. For example, when shell sees the command **cd destpath**, it invokes the function chdir("destpath"). Note that shell doesn't fork a new process for built-in commands such as **cd**.  
 1. While most Unix shells have numerous built-in commands, in this project, you shall implement
 **exit** and **cd**. The syntax and semantics of the 
 three commands are described as follows.
@@ -201,10 +198,10 @@ three commands are described as follows.
 ### Commands
 1. You can assume all commands will be provided in a single command line.
 1. Each command line has less than **TSH_MAX_CMD_LINE_LENGTH** characters.
-1. Each command line has less than **TSH_MAX_CMD_LIST_LENGTH** simple commands, connected 
-    by either '|' or ';' but not both.
+1. Each command line has less than **TSH_MAX_PIPELINE_LENGTH** simple commands, connected 
+    by  '|'.
 1. A simple command is a command that consists of a word followed by a list of arguments and 
-    an optional IO redirection.
+     optional input and output redirections.
 1. Each simple command has no more than **TSH_MAX_NUM_ARGUMENTS** arguments.
 1. If a command line contains multiple simple commands separated by '|', then only the first simple 
    command can redirect its standard input and 
@@ -272,7 +269,7 @@ from left to right.
     tsh> cat > output | wc 
     An error has occurred
     ```
-
+<!--
 ### Batch mode execution
 1. Your shell should be able to read the commands from a batch script file and execute the commands in sequence. 
    For example, assume the file `batch.sh` contains a command line `cat README | grep Copy | wc`, you can run the script and 
@@ -288,15 +285,16 @@ from left to right.
 1. A straightforward implementation of batch mode execution is to redirect the 
 standard input of the shell process to the batch script file, which i
 s passed into the `tsh` program as an argument.
+-->
 
 ## Error Handling
 Reporting clear and accurate error messages and handling program errors properly helps you quickly 
 locate the problem and fix it. In all programming projects, you should always try to develop 
 solid skills and habits to handle programming, user input, and runtime errors elegantly.
 
-In this project, we provide two functions that you shall use.
-+ For user-related errors such as the user entered a command with wrong format or syntax, use: `void ErrorU(char *cause);` 
-+ For program-related errors such as the program doesn't handle special cases yest, use: `void ErrorP(char *cause);`
+In this project, we have provided functions that you can use.
++ For user-related errors such as incorrectly formatted commands or long commands, use `void ErrorU(char *cause);` 
++ For program-related errors such as the program doesn't handle special cases yet, use: `void ErrorP(char *cause);`
 + For system-related error such as system call failures, use `void ErrorS(char *cause);`
 + For program debug information, use `void Debug(char *fmt, ...);` The Debug() function accepts the same type of 
 arguments as the printf() function.  
@@ -308,7 +306,7 @@ In your shell program, you should at least check and report the following errors
 + A very long command line (over **TSH_MAX_CMD_LINE_LENGTH** bytes).
 + A system call failed.
 
-When your shell detected an error in a command entered by the user, it should print the error message and then 
+When your shell detects an error in a command entered by the user, it should print the error message and then 
 move to the next iteration of reading, parsing, and executing a new line of command.
 
 The following scenarios should not be treated as errors: 
@@ -328,19 +326,22 @@ You can use the following test cases during your development.
     echo hello there
     # test a simple command with I/O redirect
     echo something > file.txt
-    # test a list command
+    <!--# test a list command
     echo a > b; wc b; wc README
+    -->
     # test a 2-element pipeline command
     ls | grep READ
     # test a 2-element pipeline command whose one or two sub commands have I/O redirection  
     grep lion < data.txt | wc > count
-    # test a 3 element pipeline command
+    <!--# test a 3 element pipeline command
     cat README | grep Copy | wc
+    -->
     # test tsh as an external command
     echo echo hello | tsh
-    # test tsh run in batch mode
+   <!-- # test tsh run in batch mode
     echo echo hello > batch.sh
     tsh batch.sh
+    -->
  </pre>
 ### Test program
 The xv6 authors have provided an xv6 test program testsh, source in user/testsh.c. We have modified the program 
@@ -351,16 +352,11 @@ be shown as follows:
     simple echo: PASS
     simple grep: PASS
     two commands: PASS
-    three commands: PASS
-    four commands: PASS
     output redirection: PASS
     input redirection: PASS
     both redirections: PASS
     simple pipe: PASS
-    thee-element pipe: PASS
-    four-element pipe: PASS
     pipe and redirects: PASS
-    tsh batch mode: PASS
     lots of commands: PASS
     passed all tests
 </pre>
