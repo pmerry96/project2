@@ -223,10 +223,11 @@ the following syntax.
 1. syntax: **command [argument ...] > output**
     * Redirect standard output to file output, new file mode.
     * If the file output already exists, that file will be overwritten; otherwise it will be created.
-1. syntax: **command [argument ...] >> output**
+<!--1. syntax: **command [argument ...] >> output**
      * Redirect standard output to file output, append mode.
      * If the file output already exists, the output from the command will be appended to that file; 
         otherwise it will be created.   
+
 1. syntax: **command [argument ...] 2> error**
     * Redirect standard error to file error, new file mode.
     * If the file error already exists, that file will be overwritten; 
@@ -235,9 +236,10 @@ the following syntax.
      * Redirect standard error to file output, appending mode.
      * If the file error already exists, the error from command will be appended to that file; 
         otherwise it will be created.
+-->
 1. You don't need to implement I/O redirection for internal commands.
 
-### List commands
+<!--### List commands
 1. A list command is a list of simple commands separated by ';'. For example,
     ```
     tsh> echo a > b; wc b; wc README
@@ -247,6 +249,7 @@ the following syntax.
     ```
 1. Given a list command, you shell should execute each simple command included in the list command in the order 
 from left to right.
+-->
 
 ### Pipeline commands
 1. A pipeline command is a list of commands connected by '|'. For example, 
