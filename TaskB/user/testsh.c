@@ -409,6 +409,7 @@ main(int argc, char *argv[])
   t7(&ok);
   t8(&ok);
   t9(&ok);
+  t7_1(&ok);
 
   if(ok){
     printf("passed all tests\n");
