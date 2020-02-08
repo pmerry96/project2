@@ -7,9 +7,10 @@
 
 // tsh limits
 #define TSH_MAX_CMD_LINE_LENGTH     255
-#define TSH_MAX_NUM_ARGUMENTS       5
-#define TSH_MAX_CMD_LIST_LENGTH     5
-#define TSH_MAX_PIPELINE_LENGTH     5
+#define TSH_MAX_NUM_TOKENS          32
+#define TSH_MAX_NUM_ARGUMENTS       6
+#define TSH_MAX_CMD_LIST_LENGTH     6
+#define TSH_MAX_PIPELINE_LENGTH     6
 #define TSH_MAX_FILENAME_LENGTH     64
 
 // tsh_util.c

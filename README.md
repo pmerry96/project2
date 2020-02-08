@@ -367,14 +367,22 @@ be shown as follows:
 + `tsh` is much simpler than xv6's `sh` in terms of features, so you are likely best off writing tsh from scratch. 
    But, you can look at the xv6 shell source (in user/sh.c) for ideas, and borrow code, as long as you include 
    comments saying where you got the code.
-+ The Kernighan and Ritchie C book is full of useful bits of code; feel free to incorporate any of it in 
-    your solution (with comments stating where you got the code).
++ To help you get started, we provided a sample code in user/tsh0.c, which implements the functions of parsing user input into a command structure. You can write your shell based on this code in your project make as many changes as you want to suit your program's need. To see how this program works, execute:
+
+   ```
+   # make qemu
+   xv6 kernel is booting
+   init: starting sh
+   $ tsh0
+   tsh>    
+   ```
+
 + Xv6 supplies you with a small library of C functions in user/ulib.c; feel free to use them. As mentioned above, 
    however, you are not allowed to use malloc().
 + Remember to close un-needed file descriptors, both to avoid running out, and because a process reading a 
    pipe won't see end-of-file until all the write descriptors for that pipe are closed.
 + Every system call in your code should check whether the call returned an error.
-+ Remember that a C string of N characters requires N + 1 bytes for memory storage (the last bit will be \'\0'\). 
++ Remember that a C string of N characters requires N + 1 bytes for memory storage (the last bit will be \'\0'). 
 + The testsh redirects your shell's standard output, which means you won't see it. Your shell should print 
     error and debug messages using the ErrorU(), ErrorP(), ErrorS() and Debug() function.
 + You can modify the testsh.c program if necessary. We will use a separate test program in the grading, which is 

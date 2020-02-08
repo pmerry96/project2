@@ -145,6 +145,7 @@ UPROGS=\
 	$U/_bigfile\
 	$U/_strtest\
 	$U/_errtest\
+	$U/_tsh0\
 
 fs.img: mkfs/mkfs README user/xargstest.sh $(UPROGS)
 	mkfs/mkfs fs.img README user/xargstest.sh $(UPROGS)
