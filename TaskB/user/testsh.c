@@ -89,8 +89,103 @@ strstr(char *big, char *small)
   return 0;
 }
 
+char *replace(char *big, char *pat) 
+{
+    char *p = big;
+    char *end = big + strlen(big);
+    char *p0 = big;
+    char *p1 = big;
+    
+    //fprintf(2, "big=%s\n", big);
+    // only consider the first line
+    while (p0 < end) {
+        if (*p0 != '\n')
+            *p1 = *p0;
+        p1++;
+        p0++;
+    }
+    *p1 = '\0';
+    p0 = big;
+    p1 = big;
+
+    while(p0 < end) {
+        p = strstr(p, pat);
+        if (!p) {
+            break;
+        }
+
+        while (p0 < p) {
+            *p1++ = *p0++;
+        }
+        p0 += strlen(pat);
+        p += strlen(pat);
+    }
+    while (p0 < end) {
+        *p1++ = *p0++;
+    }
+    *p1 = '\0';
+    //fprintf(2, "big=%s\n", big);
+    return big;
+}
+
+char *rstrip(char *big, char *pat) { 
+    //fprintf(2, "big=%s\n", big);
+    char *p = strstr(big, pat);
+    if (p) {
+        *p = '\0';
+    }
+    //fprintf(2, "big=%s\n", big);
+    return big;
+}
+
 // argv[1] -- the shell to be tested.
 char *shname;
+
+char prefix[32];
+int  offset = 0;
+
+void get_prefix() {
+  char infile[12] = "p.in", outfile[12] = "p.ou";
+  unlink(outfile);
+  char cmd[128]="\n";
+  writefile(infile, cmd);
+
+  int pid = fork();
+  if(pid == 0){
+    close(0);
+    if(open(infile, 0) != 0){
+      fprintf(2, "testsh: child open != 0\n");
+      exit(-1);
+    }
+    close(1);
+    if(open(outfile, O_CREATE|O_WRONLY) != 1){
+      fprintf(2, "testsh: child open != 1\n");
+      exit(-1);
+    }
+    char *argv[2];
+    argv[0] = shname;
+    argv[1] = 0;
+    exec(shname, argv);
+    fprintf(2, "testsh: exec %s failed\n", shname);
+    exit(-1);
+  }
+  if(wait(0) != pid){
+    fprintf(2, "testsh: unexpected wait() return\n");
+    exit(-1);
+  }
+  unlink(infile);
+
+  char out[256];
+  readfile(outfile, out, sizeof(out));
+  unlink(outfile);
+  char *p = strstr(out + 1, shname);
+  if ( p > 0) {
+     offset = p - out;
+  }
+  out[offset] = '\0';
+  strcpy(prefix, out);
+  //fprintf(2, "prefix=[%s]\n", prefix);
+}
 
 // fire up the shell to be tested, send it cmd on
 // its input, collect the output, check that the
@@ -142,9 +237,13 @@ one(char *cmd, char *expect, int tight)
   readfile(outfile, out, sizeof(out));
   unlink(outfile);
 
+  replace(out, prefix);
+  rstrip(out, "tsh (");
+
   if(strstr(out, expect) != 0){
     if(tight && strlen(out) > strlen(expect) + 20){
       fprintf(2, "testsh: saw expected output, but too much else as well\n");
+      fprintf(2, "testsh: expected=%s|received=%s\n", expect, out);
       return 0; // fail
     }
     return 1; // pass
@@ -395,7 +494,7 @@ int
 main(int argc, char *argv[])
 {
   if(argc != 2){
-    fprintf(2, "Usage: testsh nsh\n");
+    fprintf(2, "Usage: testsh tsh\n");
     exit(-1);
   }
   shname = argv[1];
@@ -403,6 +502,7 @@ main(int argc, char *argv[])
   seed += getpid();
 
   int ok = 1;
+  get_prefix();
 
   t1(&ok);
   t2(&ok);
