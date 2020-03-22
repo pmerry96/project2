@@ -8,6 +8,10 @@
 #include "user/user.h"
 #include "kernel/fcntl.h"
 
+
+#define STDIN  0
+#define STDOUT 1
+#define STDERR 2
 unsigned int seed = 123456789;
 
 // return a random integer.
@@ -39,11 +43,11 @@ writefile(char *name, char *data)
   unlink(name); // since no truncation
   int fd = open(name, O_CREATE|O_WRONLY);
   if(fd < 0){
-    fprintf(2, "testsh: could not write %s\n", name);
+    fprintf(STDERR, "testsh: could not write %s\n", name);
     exit(-1);
   }
   if(write(fd, data, strlen(data)) != strlen(data)){
-    fprintf(2, "testsh: write failed\n");
+    fprintf(STDERR, "testsh: write failed\n");
     exit(-1);
   }
   close(fd);
@@ -56,13 +60,13 @@ readfile(char *name, char *data, int max)
   data[0] = '\0';
   int fd = open(name, 0);
   if(fd < 0){
-    fprintf(2, "testsh: open %s failed\n", name);
+    fprintf(STDERR, "testsh: open %s failed\n", name);
     return;
   }
   int n = read(fd, data, max-1);
   close(fd);
   if(n < 0){
-    fprintf(2, "testsh: read %s failed\n", name);
+    fprintf(STDERR, "testsh: read %s failed\n", name);
     return;
   }
   data[n] = '\0';
@@ -89,103 +93,8 @@ strstr(char *big, char *small)
   return 0;
 }
 
-char *replace(char *big, char *pat) 
-{
-    char *p = big;
-    char *end = big + strlen(big);
-    char *p0 = big;
-    char *p1 = big;
-    
-    //fprintf(2, "big=%s\n", big);
-    // only consider the first line
-    while (p0 < end) {
-        if (*p0 != '\n')
-            *p1 = *p0;
-        p1++;
-        p0++;
-    }
-    *p1 = '\0';
-    p0 = big;
-    p1 = big;
-
-    while(p0 < end) {
-        p = strstr(p, pat);
-        if (!p) {
-            break;
-        }
-
-        while (p0 < p) {
-            *p1++ = *p0++;
-        }
-        p0 += strlen(pat);
-        p += strlen(pat);
-    }
-    while (p0 < end) {
-        *p1++ = *p0++;
-    }
-    *p1 = '\0';
-    //fprintf(2, "big=%s\n", big);
-    return big;
-}
-
-char *rstrip(char *big, char *pat) { 
-    //fprintf(2, "big=%s\n", big);
-    char *p = strstr(big, pat);
-    if (p) {
-        *p = '\0';
-    }
-    //fprintf(2, "big=%s\n", big);
-    return big;
-}
-
 // argv[1] -- the shell to be tested.
 char *shname;
-
-char prefix[32];
-int  offset = 0;
-
-void get_prefix() {
-  char infile[12] = "p.in", outfile[12] = "p.ou";
-  unlink(outfile);
-  char cmd[128]="\n";
-  writefile(infile, cmd);
-
-  int pid = fork();
-  if(pid == 0){
-    close(0);
-    if(open(infile, 0) != 0){
-      fprintf(2, "testsh: child open != 0\n");
-      exit(-1);
-    }
-    close(1);
-    if(open(outfile, O_CREATE|O_WRONLY) != 1){
-      fprintf(2, "testsh: child open != 1\n");
-      exit(-1);
-    }
-    char *argv[2];
-    argv[0] = shname;
-    argv[1] = 0;
-    exec(shname, argv);
-    fprintf(2, "testsh: exec %s failed\n", shname);
-    exit(-1);
-  }
-  if(wait(0) != pid){
-    fprintf(2, "testsh: unexpected wait() return\n");
-    exit(-1);
-  }
-  unlink(infile);
-
-  char out[256];
-  readfile(outfile, out, sizeof(out));
-  unlink(outfile);
-  char *p = strstr(out + 1, shname);
-  if ( p > 0) {
-     offset = p - out;
-  }
-  out[offset] = '\0';
-  strcpy(prefix, out);
-  //fprintf(2, "prefix=[%s]\n", prefix);
-}
 
 // fire up the shell to be tested, send it cmd on
 // its input, collect the output, check that the
@@ -204,31 +113,31 @@ one(char *cmd, char *expect, int tight)
 
   int pid = fork();
   if(pid < 0){
-    fprintf(2, "testsh: fork() failed\n");
+    fprintf(STDERR, "testsh: fork() failed\n");
     exit(-1);
   }
 
   if(pid == 0){
     close(0);
     if(open(infile, 0) != 0){
-      fprintf(2, "testsh: child open != 0\n");
+      fprintf(STDERR, "testsh: child open != 0\n");
       exit(-1);
     }
     close(1);
     if(open(outfile, O_CREATE|O_WRONLY) != 1){
-      fprintf(2, "testsh: child open != 1\n");
+      fprintf(STDERR, "testsh: child open != 1\n");
       exit(-1);
     }
     char *argv[2];
     argv[0] = shname;
     argv[1] = 0;
     exec(shname, argv);
-    fprintf(2, "testsh: exec %s failed\n", shname);
+    fprintf(STDERR, "testsh: exec %s failed\n", shname);
     exit(-1);
   }
 
   if(wait(0) != pid){
-    fprintf(2, "testsh: unexpected wait() return\n");
+    fprintf(STDERR, "testsh: unexpected wait() return\n");
     exit(-1);
   }
   unlink(infile);
@@ -237,13 +146,9 @@ one(char *cmd, char *expect, int tight)
   readfile(outfile, out, sizeof(out));
   unlink(outfile);
 
-  replace(out, prefix);
-  rstrip(out, "tsh (");
-
   if(strstr(out, expect) != 0){
     if(tight && strlen(out) > strlen(expect) + 20){
-      fprintf(2, "testsh: saw expected output, but too much else as well\n");
-      fprintf(2, "testsh: expected=%s|received=%s\n", expect, out);
+      fprintf(STDERR, "testsh: saw expected output, but too much else as well\n");
       return 0; // fail
     }
     return 1; // pass
@@ -465,7 +370,7 @@ t9(int *ok)
   
   char *cmd = malloc(25 * 36 + 100);
   if(cmd == 0){
-    fprintf(2, "testsh: malloc failed\n");
+    fprintf(STDERR, "testsh: malloc failed\n");
     exit(-1);
   }
 
@@ -494,7 +399,7 @@ int
 main(int argc, char *argv[])
 {
   if(argc != 2){
-    fprintf(2, "Usage: testsh tsh\n");
+    fprintf(STDERR, "Usage: testsh nsh\n");
     exit(-1);
   }
   shname = argv[1];
@@ -502,7 +407,6 @@ main(int argc, char *argv[])
   seed += getpid();
 
   int ok = 1;
-  get_prefix();
 
   t1(&ok);
   t2(&ok);
